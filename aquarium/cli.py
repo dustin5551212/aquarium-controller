@@ -66,6 +66,11 @@ def cmd_run(args: argparse.Namespace) -> int:
     runtime.start()
     server = serve(runtime, args.host, args.port)
 
+    if cfg.server.host not in ("127.0.0.1", "localhost", "::1") and not cfg.server.token:
+        print(f"warning: dashboard is listening on {cfg.server.host} without a token — "
+              f"anyone on this network can switch relays. Set server.token to lock the API.",
+              file=sys.stderr)
+
     # serve_forever() must not run in the thread that calls shutdown(), or the
     # shutdown deadlocks waiting for a loop that is waiting for the signal
     # handler to return.
