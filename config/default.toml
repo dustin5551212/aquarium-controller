@@ -1,0 +1,234 @@
+# Aquarium controller configuration.
+# Copy to ~/.config/aquarium/config.toml (or run `aqctl init`) and edit.
+
+[tank]
+name = "Reef 120"
+volume_l = 340
+water_type = "reef"          # reef | fresh — picks sane alert thresholds in the UI
+
+[server]
+host = "0.0.0.0"
+port = 5176
+sample_interval_s = 5        # how often readings are persisted
+control_interval_s = 1.0     # control loop period
+history_days = 30            # retention for the readings table
+token = ""                   # set to require a bearer token for the API
+
+[safety]
+stale_after_s = 45           # a reading older than this blocks its control loop
+max_on_s = 3600              # hard cap on any actuator's continuous run time
+
+# ---------------------------------------------------------------- sensors ---
+# driver: sim | ds18b20 | ezo | ads1115
+# Every control loop and alert that names a metric needs exactly one sensor.
+
+[[sensors]]
+metric = "temp_c"
+driver = "sim"
+[sensors.params]
+value = 25.4
+drift_per_hour = 0.01
+
+[[sensors]]
+metric = "ph"
+driver = "sim"
+[sensors.params]
+value = 8.14
+swing = 0.07
+
+[[sensors]]
+metric = "ec_us"
+driver = "sim"
+[sensors.params]
+value = 53200
+
+[[sensors]]
+metric = "orp_mv"
+driver = "sim"
+[sensors.params]
+value = 342
+
+[[sensors]]
+metric = "do_mg_l"
+driver = "sim"
+[sensors.params]
+value = 6.6
+
+[[sensors]]
+metric = "level_pct"
+driver = "sim"
+[sensors.params]
+value = 94.0
+
+# -------------------------------------------------------------- actuators ---
+# driver: sim | http | gpio
+# kind:   heater | chiller | ato | doser | co2 | light | pump | fan
+
+[[actuators]]
+id = "heater"
+kind = "heater"
+label = "Heater"
+driver = "sim"
+min_on_s = 30
+min_off_s = 120
+max_on_s = 1800
+
+[[actuators]]
+id = "chiller"
+kind = "chiller"
+label = "Chiller"
+driver = "sim"
+min_on_s = 60
+min_off_s = 300
+max_on_s = 1800
+
+[[actuators]]
+id = "ato_pump"
+kind = "ato"
+label = "Top-off pump"
+driver = "sim"
+min_on_s = 2
+min_off_s = 120
+max_on_s = 120
+
+[[actuators]]
+id = "dose_alk"
+kind = "doser"
+label = "Alkalinity"
+driver = "sim"
+min_on_s = 1
+min_off_s = 1
+max_on_s = 300
+[actuators.params]
+rate_ml_s = 2.0
+
+[[actuators]]
+id = "dose_ca"
+kind = "doser"
+label = "Calcium"
+driver = "sim"
+min_on_s = 1
+min_off_s = 1
+max_on_s = 300
+[actuators.params]
+rate_ml_s = 2.0
+
+[[actuators]]
+id = "co2"
+kind = "co2"
+label = "CO₂ solenoid"
+driver = "sim"
+min_on_s = 30
+min_off_s = 60
+max_on_s = 7200
+
+[[actuators]]
+id = "light"
+kind = "light"
+label = "Display light"
+driver = "sim"
+min_on_s = 1
+min_off_s = 1
+max_on_s = 43200
+
+# ---------------------------------------------------------------- control ---
+
+[control.temp]
+enabled = true
+setpoint_c = 25.5
+deadband_c = 0.35
+heater = "heater"
+chiller = "chiller"
+
+[control.ato]
+enabled = true
+sensor = "level_pct"
+low_pct = 92.0
+high_pct = 96.0
+pump = "ato_pump"
+max_run_s = 120
+cooldown_s = 300
+
+[control.light]
+enabled = true
+actuator = "light"
+start = "10:00"
+end = "20:00"
+
+[control.co2]
+enabled = false
+sensor = "ph"
+target = 6.70
+hysteresis = 0.05
+solenoid = "co2"
+lights_only = true
+
+[[control.dose]]
+pump = "dose_alk"
+schedule = ["09:00", "21:00"]
+ml = 12.0
+daily_max_ml = 30.0
+
+[[control.dose]]
+pump = "dose_ca"
+schedule = ["09:05", "21:05"]
+ml = 10.0
+daily_max_ml = 25.0
+
+# ----------------------------------------------------------------- alerts ---
+# above/below are inclusive limits; hold_s debounces sensor noise.
+
+[[alerts]]
+metric = "temp_c"
+above = 27.2
+hold_s = 90
+severity = "critical"
+message = "Tank temperature high"
+
+[[alerts]]
+metric = "temp_c"
+below = 23.5
+hold_s = 90
+severity = "critical"
+message = "Tank temperature low — check heater"
+
+[[alerts]]
+metric = "ph"
+above = 8.55
+hold_s = 300
+severity = "warning"
+message = "pH high — check alkalinity dosing"
+
+[[alerts]]
+metric = "ph"
+below = 7.70
+hold_s = 300
+severity = "warning"
+message = "pH low — check CO2 / aeration"
+
+[[alerts]]
+metric = "salinity_ppt"
+below = 33.0
+hold_s = 600
+severity = "warning"
+message = "Salinity low — check ATO / refractometer"
+
+[[alerts]]
+metric = "level_pct"
+below = 85.0
+hold_s = 60
+severity = "critical"
+message = "Sump level critically low"
+
+[[alerts]]
+metric = "orp_mv"
+below = 250
+hold_s = 900
+severity = "info"
+message = "ORP low — organics accumulating?"
+
+# ------------------------------------------------------------- notification ---
+[notify]
+webhook = ""                 # POST JSON {"message": ..., "severity": ...}
+command = ""                 # e.g. "hermes send -t telegram:8678703848 {message}"
+cooldown_s = 300

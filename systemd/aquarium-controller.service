@@ -1,0 +1,19 @@
+[Unit]
+Description=Aquarium controller (probes, control loops, dashboard)
+Documentation=file://%h/Projects/aquarium-controller/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Projects/aquarium-controller
+ExecStart=%h/Projects/aquarium-controller/.venv/bin/aqctl run
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+RestartSec=5
+# Give the runtime time to switch relays off on the way down.
+KillSignal=SIGTERM
+TimeoutStopSec=20
+
+[Install]
+WantedBy=default.target

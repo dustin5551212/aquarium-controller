@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aquarium Controller</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="eyebrow">Aquarium Controller</div>
+    <h1 id="tank">Connecting…</h1>
+  </div>
+  <div class="top-right">
+    <div class="ranges" role="group" aria-label="Chart range">
+      <button class="range" data-min="60">1h</button>
+      <button class="range is-on" data-min="360">6h</button>
+      <button class="range" data-min="1440">24h</button>
+    </div>
+    <div class="chip" id="mode">--</div>
+    <div class="live"><span class="dot" id="live-dot"></span><span id="live-text">connecting</span></div>
+  </div>
+</header>
+
+<section id="alerts" class="alerts hidden" aria-live="polite"></section>
+
+<main>
+  <section class="cards" id="cards"></section>
+
+  <div class="columns">
+    <section class="panel">
+      <h2>Equipment <span class="hint" id="equip-hint"></span></h2>
+      <div id="equipment" class="equipment"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Dosing today</h2>
+      <div id="dosing" class="dosing"></div>
+      <h2 class="mt">Recent events</h2>
+      <div id="events" class="events"></div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <span id="footer-info">—</span>
+</footer>
+
+<div id="toast" class="toast" role="status"></div>
+<script src="app.js"></script>
+</body>
+</html>
