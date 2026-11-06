@@ -213,6 +213,7 @@ class Controller:
         self._dosed: set[str] = set()
         self._dose_day = ""
         self._dose_today: dict[str, float] = {}
+        self._dose_source = None
         self.loops: dict[str, dict] = {}
 
     # -- helpers ---------------------------------------------------------
@@ -434,6 +435,13 @@ class Controller:
             self._dose_day = day
             self._dose_today.clear()
             self._dosed.clear()
+        # The dose log is the source of truth, so a manual dose through the
+        # API/CLI counts against the daily cap exactly like a scheduled one.
+        if self._dose_source is not None:
+            try:
+                self._dose_today = dict(self._dose_source())
+            except Exception:                            # noqa: BLE001
+                pass
 
         status: dict[str, dict] = {}
         for spec in doses:
@@ -497,3 +505,7 @@ class Controller:
     def seed_dose_totals(self, totals: dict[str, float], day: str) -> None:
         self._dose_day = day
         self._dose_today = dict(totals)
+
+    def bind_dose_totals(self, source) -> None:
+        """Point the loop at a live total (the persisted dose log)."""
+        self._dose_source = source

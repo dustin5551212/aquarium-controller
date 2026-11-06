@@ -49,6 +49,7 @@ class Runtime:
         self._samples = 0
 
         self._seed_dosing()
+        self.ctl.bind_dose_totals(self._dose_totals_today)
 
     # -- dosing continuity across restarts -------------------------------
     def _seed_dosing(self) -> None:
@@ -58,6 +59,10 @@ class Runtime:
         except Exception:  # pragma: no cover - storage is best effort here
             totals = {}
         self.ctl.seed_dose_totals(totals, time.strftime("%Y-%m-%d"))
+
+    def _dose_totals_today(self) -> dict[str, float]:
+        start = time.mktime(time.localtime()[:3] + (0, 0, 0, 0, 0, -1))
+        return self.store.doses_since(start)
 
     # -- sensor polling --------------------------------------------------
     def _poll_sensors(self, now: float) -> None:

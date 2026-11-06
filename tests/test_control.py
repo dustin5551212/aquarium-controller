@@ -142,6 +142,18 @@ def test_dose_fires_once_per_slot_and_records_ml():
     assert doses[0]["ml"] == pytest.approx(12.0, abs=0.01)
 
 
+def test_manual_dose_counts_against_daily_cap():
+    now = time.time()
+    slot = time.strftime("%H:%M", time.localtime(now - 30))
+    cfg = make_config(dose=[{"pump": "dose_alk", "schedule": [slot], "ml": 12.0,
+                             "daily_max_ml": 13.0}])
+    rig = Rig(cfg)
+    rig.ctl.bind_dose_totals(lambda: {"dose_alk": 12.0})   # already dosed by hand
+    _, faults = rig.step(now, temp_c=25.0)
+    assert "dose_alk" not in rig.hw.active_pulses()
+    assert any(f.key == "dose_cap:dose_alk" for f in faults)
+
+
 def test_dose_respects_daily_cap():
     now = time.time()
     slot = time.strftime("%H:%M", time.localtime(now - 30))
