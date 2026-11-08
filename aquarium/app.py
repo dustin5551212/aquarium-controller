@@ -192,7 +192,7 @@ class Runtime:
     # -- manual control --------------------------------------------------
     def set_actuator(self, actuator_id: str, on: bool, minutes: float) -> None:
         with self._lock:
-            self.hw.override(actuator_id, on, minutes, time.time())
+            self.hw.override(actuator_id, on, minutes * 60.0, time.time())
             self.poll()
         log.info("manual override: %s -> %s for %s min", actuator_id, on, minutes)
 

@@ -271,7 +271,7 @@ aquarium/
 config/         annotated default configuration
 scripts/        seed_demo.py — fabricate simulation history for demos
 systemd/        user unit
-tests/          48 tests: loops, safety, drivers, storage, API, alerts
+tests/          49 tests: loops, safety, drivers, storage, API, alerts
 ```
 
 ## License

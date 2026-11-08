@@ -64,6 +64,11 @@ def test_manual_override_and_release(running):
     assert runtime.hw.status["heater"].on is True
     assert runtime.hw.status["heater"].mode == "manual"
 
+    # `minutes` is minutes: a 5 minute override must not expire in 5 seconds.
+    _status, state = call(base, "/api/state")
+    heater = next(a for a in state["actuators"] if a["id"] == "heater")
+    assert 290 <= heater["override_remaining_s"] <= 300
+
     status, body = call(base, "/api/actuators/heater", "DELETE")
     assert status == 200
     assert runtime.hw.status["heater"].mode == "auto"

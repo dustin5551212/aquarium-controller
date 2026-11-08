@@ -165,6 +165,15 @@ def test_dose_respects_daily_cap():
     assert any(f.key == "dose_cap:dose_alk" for f in faults)
 
 
+def test_reason_tracks_decision_without_a_state_change():
+    rig = Rig(make_config())
+    rig.step(1000, temp_c=24.0)
+    assert rig.on("heater")
+    rig.step(1002, temp_c=26.0)          # wants off, min_on_s=30 holds it on
+    assert rig.on("heater")
+    assert "min on-time" in rig.hw.status["heater"].reason
+
+
 def test_manual_override_expires():
     rig = Rig(make_config())
     rig.hw.override("heater", False, 60, 1000)

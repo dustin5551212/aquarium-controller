@@ -46,10 +46,10 @@ class Hardware:
         self.faults: dict[str, Fault] = {}
 
     # -- manual commands -------------------------------------------------
-    def override(self, actuator_id: str, on: bool, seconds: float, now: float) -> None:
+    def override(self, actuator_id: str, on: bool, duration_s: float, now: float) -> None:
         if actuator_id not in self.status:
             raise KeyError(actuator_id)
-        self._override[actuator_id] = (bool(on), now + max(1.0, seconds))
+        self._override[actuator_id] = (bool(on), now + max(1.0, duration_s))
 
     def clear_override(self, actuator_id: str, now: float) -> None:
         self._override.pop(actuator_id, None)
@@ -165,6 +165,10 @@ class Hardware:
                     "ts": now, "actuator": aid, "on": target,
                     "reason": reason, "source": st.mode,
                 })
+            else:
+                # Same state, but the reason may have moved on (override
+                # expiring, interlock released, a fresh setpoint comment).
+                st.reason = reason
         return faults
 
     def _finish_pulse(self, aid: str, now: float, pulse: Pulse) -> None:
